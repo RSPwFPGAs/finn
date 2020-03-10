@@ -167,3 +167,46 @@ class MoveScalarAddPastMatMul(Transformation):
                         graph_modified = True
         model = model.transform(InferShapes())
         return (model, graph_modified)
+
+
+class MoveScalarMulPastConv(Transformation):
+    """Move scalar mul operations past conv operations. We want to have muls
+    next to each other such that they can be collapsed into a single mul."""
+
+    def apply(self, model):
+        graph = model.graph
+        node_ind = 0
+        graph_modified = False
+        for n in graph.node:
+            node_ind += 1
+            if n.op_type == "Mul":
+                consumer = model.find_consumer(n.output[0])
+                if consumer is not None and consumer.op_type == "Conv":
+                    mul_weight_name = n.input[1]
+                    conv_weight_name = consumer.input[1]
+                    A = model.get_initializer(mul_weight_name)
+                    W = model.get_initializer(conv_weight_name)
+                    assert A is not None, "Initializer for mul weights is not set."
+                    assert W is not None, "Initializer for conv weights is not set."
+                    start_name = n.input[0]
+                    middle_name = n.output[0]
+                    end_name = consumer.output[0]
+                    mm_out_shape = model.get_tensor_shape(end_name)
+                    if all(x == 1 for x in A.shape):
+                        # if the mul is scalar, we can simply swap the order of ops
+                        # make and insert new nodes
+                        new_conv = oh.make_node(
+                            "Conv", [start_name, conv_weight_name], [middle_name]
+                        )
+                        new_mul = oh.make_node(
+                            "Mul", [middle_name, mul_weight_name], [end_name]
+                        )
+                        graph.node.insert(node_ind, new_conv)
+                        graph.node.insert(node_ind + 1, new_mul)
+                        model.set_tensor_shape(middle_name, mm_out_shape)
+                        # remove old nodes
+                        graph.node.remove(n)
+                        graph.node.remove(consumer)
+                        graph_modified = True
+        model = model.transform(InferShapes())
+        return (model, graph_modified)
