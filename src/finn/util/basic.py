@@ -38,6 +38,7 @@ from finn.core.datatype import DataType
 
 # mapping from PYNQ board names to FPGA part names
 pynq_part_map = dict()
+pynq_part_map["KCU105"] = "xcku040-ffva1156-2-e"
 pynq_part_map["Ultra96"] = "xczu3eg-sbva484-1-e"
 pynq_part_map["Pynq-Z1"] = "xc7z020clg400-1"
 
@@ -61,6 +62,7 @@ def make_build_dir(prefix=""):
     will survive on the host after the FINN Docker container exits."""
     try:
         inst_prefix = os.environ["FINN_INST_NAME"] + "/"
+        tempfile.tempdir = get_finn_root() + "/tmp/"
         return tempfile.mkdtemp(prefix=inst_prefix + prefix)
     except KeyError:
         raise Exception(

@@ -57,7 +57,7 @@ DOCKER_INST_NAME=$(echo "$DOCKER_INST_NAME" | tr '[:upper:]' '[:lower:]')
 : ${NETRON_PORT=8081}
 : ${PYNQ_USERNAME="xilinx"}
 : ${PYNQ_PASSWORD="xilinx"}
-: ${PYNQ_BOARD="Pynq-Z1"}
+: ${PYNQ_BOARD="KCU105"}
 : ${PYNQ_TARGET_DIR="/home/xilinx/$DOCKER_INST_NAME"}
 
 # Absolute path to this script, e.g. /home/user/bin/foo.sh
@@ -78,7 +78,7 @@ CNPY_LOCAL=$SCRIPTPATH/cnpy
 FINN_HLS_LOCAL=$SCRIPTPATH/finn-hlslib
 PYVERILATOR_LOCAL=$SCRIPTPATH/pyverilator
 PYNQSHELL_LOCAL=$SCRIPTPATH/PYNQ-HelloWorld
-BUILD_LOCAL=/tmp/$DOCKER_INST_NAME
+BUILD_LOCAL=$SCRIPTPATH/tmp/$DOCKER_INST_NAME
 VIVADO_HLS_LOCAL=$VIVADO_PATH
 VIVADO_IP_CACHE=$BUILD_LOCAL/vivado_ip_cache
 
